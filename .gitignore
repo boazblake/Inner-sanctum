@@ -1,5 +1,40 @@
+# Dependencies
+node_modules/
+
+# Expo / React Native local state
+.expo/
+.expo-shared/
+web-build/
+dist/
+dist-ssr/
+
+# Native build output
+build/
+DerivedData/
+ios/build/
+ios/DerivedData/
+android/.gradle/
+android/build/
+android/app/build/
+
+# CocoaPods generated files
+ios/Pods/
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+*.local
+ios/.xcode.env.local
+
+# Xcode user state
+*.xcuserstate
+*.xcuserdata/
+*.xcuserdatad/
+*.moved-aside
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,16 +42,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Large local model binaries
+assets/models/*.bin
+assets/models/*.gguf
+!assets/models/.gitkeep
 
-# Editor directories and files
+# OS / editor files
+.DS_Store
+.idea/
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
