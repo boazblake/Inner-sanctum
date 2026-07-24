@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Sanctum",
+    "slug": "sanctum",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "platforms": [
+      "ios"
+    ],
+    "scheme": "sanctum",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Sanctum records your voice so it can create a private local journal entry."
+      },
+      "bundleIdentifier": "com.anonymous.sanctum"
+    },
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Sanctum records your voice so it can create a private local journal entry."
+        }
+      ],
+      [
+        "llama.rn",
+        {
+          "forceCxx20": true
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ],
+      "./plugins/withFmtPodPatch",
+      "./plugins/withWhisperOldArchPatch",
+      "./plugins/withSanctumModels",
+      "./plugins/withSanctumFoundationModels"
+    ]
+  }
+}
