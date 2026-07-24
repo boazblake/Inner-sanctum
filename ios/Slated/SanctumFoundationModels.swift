@@ -66,11 +66,9 @@ private func foundationModelIsAvailable() -> Bool {
 @available(iOS 26.0, *)
 private func createFoundationReflection(prompt: String) async throws -> String {
   let instructions = """
-  You run fully on device for a private journal app. Create a compact reflection from a voice transcript.
-  Return strict JSON only. No markdown. No advice. No chat. No diagnosis.
-  Required keys: title, topic, mood, observation.
+  Return strict JSON only. No markdown or fenced code.
+  Required keys exactly: title, topic, mood, observation.
   mood must be one of: settled, tender, busy, heavy, clear.
-  Keep title under 8 words. Keep observation one sentence.
   """
 
   let session = LanguageModelSession(instructions: instructions)

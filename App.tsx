@@ -15,12 +15,14 @@ import * as Clipboard from "expo-clipboard";
 import { describeOfflineAIStatus, explainOfflineAISetup, findDefaultReflectionModelPath } from "./src/modelPaths";
 import { clearSelectedReflectionModel, getReflectionModelStatus, importReflectionModelFromPicker } from "./src/modelSettings";
 import { createBlankDraft } from "./src/reflection";
-import { DEFAULT_REFLECTION_PROMPT, getReflectionPrompt, resetReflectionPrompt, setReflectionPrompt } from "./src/reflectionPrompt";
+import { buildReflectionPromptTemplate, REQUIRED_REFLECTION_API_CONTRACT } from "./src/reflectionPrompt";
+import { DEFAULT_REFLECTION_GUIDANCE, DEFAULT_REFLECTION_SETTINGS, getReflectionSettings, normalizeSettings, resetReflectionSettings, setReflectionSettings } from "./src/reflectionSettings";
 import { createReflectionWithBestLocalProvider } from "./src/reflectionProvider";
 import { recordingAdapter } from "./src/recordingAdapter";
 import { entryStore } from "./src/storage";
 import { transcribeLocalAudio } from "./src/transcription";
 import type { JournalEntry, RecordingState, ScreenName } from "./src/types";
+import type { ReflectionSettings } from "./src/reflectionSettings";
 import type { ReflectionModelStatus } from "./src/modelSettings";
 import { formatDuration, formatLongDate, formatShortDate } from "./src/utils";
 
@@ -74,12 +76,12 @@ export default function App() {
   const [draftText, setDraftText] = useState(createBlankDraft());
   const [modelStatus, setModelStatus] = useState<ReflectionModelStatus>({ source: "missing", title: "Checking model", detail: "Looking for local reflection model." });
   const [lastSaveError, setLastSaveError] = useState<string | null>(null);
-  const [reflectionPrompt, setReflectionPromptState] = useState(DEFAULT_REFLECTION_PROMPT);
+  const [reflectionSettings, setReflectionSettingsState] = useState<ReflectionSettings>(DEFAULT_REFLECTION_SETTINGS);
 
   useEffect(() => {
     void loadEntries();
     void refreshModelStatus();
-    void loadReflectionPrompt();
+    void loadReflectionSettings();
   }, []);
 
   useEffect(() => {
@@ -111,8 +113,8 @@ export default function App() {
     setModelStatus(status);
   }
 
-  async function loadReflectionPrompt() {
-    setReflectionPromptState(await getReflectionPrompt());
+  async function loadReflectionSettings() {
+    setReflectionSettingsState(await getReflectionSettings());
   }
 
   async function startRecording() {
@@ -195,25 +197,33 @@ export default function App() {
     }
   }
 
-  async function saveReflectionPrompt() {
+  async function saveReflectionSettings() {
     try {
-      const saved = await setReflectionPrompt(reflectionPrompt);
-      setReflectionPromptState(saved);
-      Alert.alert("Prompt saved", "Reflection prompt updated for Apple Foundation Models and llama.rn.");
+      const saved = await setReflectionSettings(reflectionSettings);
+      setReflectionSettingsState(saved);
+      Alert.alert("Settings saved", "Reflection controls updated for Apple Foundation Models and llama.rn.");
     } catch (error) {
-      setLastSaveError(`Prompt save failed: ${readErrorMessage(error)}`);
+      setLastSaveError(`Reflection settings save failed: ${readErrorMessage(error)}`);
       setScreen("record");
     }
   }
 
-  async function resetPrompt() {
+  async function resetReflectionControls() {
     try {
-      setReflectionPromptState(await resetReflectionPrompt());
-      Alert.alert("Prompt reset", "Default strict JSON reflection prompt restored.");
+      setReflectionSettingsState(await resetReflectionSettings());
+      Alert.alert("Settings reset", "Default reflection controls restored.");
     } catch (error) {
-      setLastSaveError(`Prompt reset failed: ${readErrorMessage(error)}`);
+      setLastSaveError(`Reflection settings reset failed: ${readErrorMessage(error)}`);
       setScreen("record");
     }
+  }
+
+  function resetReflectionGuidance() {
+    updateReflectionSettings({ guidance: DEFAULT_REFLECTION_GUIDANCE });
+  }
+
+  function updateReflectionSettings(patch: Partial<ReflectionSettings>) {
+    setReflectionSettingsState((current) => normalizeSettings({ ...current, ...patch }));
   }
 
   async function checkOfflineAI() {
@@ -234,6 +244,11 @@ export default function App() {
     Alert.alert("Copied", "Error copied to clipboard.");
   }
 
+  async function copyReflectionPromptTemplate() {
+    await Clipboard.setStringAsync(buildReflectionPromptTemplate(reflectionSettings));
+    Alert.alert("Copied", "Active reflection template copied to clipboard.");
+  }
+
   function openEntry(id: string) {
     setSelectedEntryId(id);
     setScreen("detail");
@@ -249,7 +264,7 @@ export default function App() {
         {screen === "entries" ? <Entries entries={entries} onOpenEntry={openEntry} onDeleteEntry={confirmDeleteEntry} /> : null}
         {screen === "detail" ? <Detail entry={selectedEntry} onBack={() => setScreen("entries")} onDeleteEntry={confirmDeleteEntry} /> : null}
         {screen === "recap" ? <Recap entries={entries} /> : null}
-        {screen === "settings" ? <Settings modelStatus={modelStatus} reflectionPrompt={reflectionPrompt} onReflectionPromptChange={setReflectionPromptState} onSavePrompt={() => { void saveReflectionPrompt(); }} onResetPrompt={() => { void resetPrompt(); }} onImportModel={() => { void importReflectionModel(); }} onResetModel={() => { void resetReflectionModel(); }} onCheckOfflineAI={() => { void checkOfflineAI(); }} onClear={() => { void clearEntries(); }} /> : null}
+        {screen === "settings" ? <Settings modelStatus={modelStatus} reflectionSettings={reflectionSettings} onReflectionSettingsChange={updateReflectionSettings} onResetGuidance={resetReflectionGuidance} onCopyPromptTemplate={() => { void copyReflectionPromptTemplate(); }} onSaveSettings={() => { void saveReflectionSettings(); }} onResetSettings={() => { void resetReflectionControls(); }} onImportModel={() => { void importReflectionModel(); }} onResetModel={() => { void resetReflectionModel(); }} onCheckOfflineAI={() => { void checkOfflineAI(); }} onClear={() => { void clearEntries(); }} /> : null}
       </View>
     </SafeAreaView>
   );
@@ -413,7 +428,8 @@ function Recap({ entries }: { entries: JournalEntry[] }) {
   );
 }
 
-function Settings({ modelStatus, reflectionPrompt, onReflectionPromptChange, onSavePrompt, onResetPrompt, onImportModel, onResetModel, onCheckOfflineAI, onClear }: { modelStatus: ReflectionModelStatus; reflectionPrompt: string; onReflectionPromptChange: (text: string) => void; onSavePrompt: () => void; onResetPrompt: () => void; onImportModel: () => void; onResetModel: () => void; onCheckOfflineAI: () => void; onClear: () => void }) {
+function Settings({ modelStatus, reflectionSettings, onReflectionSettingsChange, onResetGuidance, onCopyPromptTemplate, onSaveSettings, onResetSettings, onImportModel, onResetModel, onCheckOfflineAI, onClear }: { modelStatus: ReflectionModelStatus; reflectionSettings: ReflectionSettings; onReflectionSettingsChange: (patch: Partial<ReflectionSettings>) => void; onResetGuidance: () => void; onCopyPromptTemplate: () => void; onSaveSettings: () => void; onResetSettings: () => void; onImportModel: () => void; onResetModel: () => void; onCheckOfflineAI: () => void; onClear: () => void }) {
+  const promptTemplate = buildReflectionPromptTemplate(reflectionSettings);
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <Text style={styles.title}>Privacy</Text>
@@ -435,13 +451,55 @@ function Settings({ modelStatus, reflectionPrompt, onReflectionPromptChange, onS
       </View>
       <View style={styles.privacyCard}>
         <Text style={styles.cardTitle}>Reflection guidance</Text>
-        <TextInput value={reflectionPrompt} onChangeText={onReflectionPromptChange} multiline placeholder="Reflection prompt" placeholderTextColor={colors.muted} style={styles.promptInput} />
-        <PrimaryButton label="Save guidance" onPress={onSavePrompt} />
-        <SecondaryButton label="Reset guidance" onPress={onResetPrompt} />
-        <Text style={styles.note}>Guidance is editable and stored locally. Sanctum always appends fixed JSON schema instructions: title, topic, mood, observation; mood enum settled, tender, busy, heavy, clear; no advice/chat/diagnosis.</Text>
+        <TextInput value={reflectionSettings.guidance} onChangeText={(guidance) => onReflectionSettingsChange({ guidance })} multiline placeholder="Reflection guidance" placeholderTextColor={colors.muted} style={styles.promptInput} />
+        <SecondaryButton label="Reset guidance to default" onPress={onResetGuidance} />
+        <Text style={styles.note}>Guidance influences tone/content and stays local. Everything outside the API contract below is editable here or via toggles.</Text>
+        <ToggleRow label="No advice" value={reflectionSettings.noAdvice} onToggle={() => onReflectionSettingsChange({ noAdvice: !reflectionSettings.noAdvice })} />
+        <ToggleRow label="No chat" value={reflectionSettings.noChat} onToggle={() => onReflectionSettingsChange({ noChat: !reflectionSettings.noChat })} />
+        <ToggleRow label="No diagnosis" value={reflectionSettings.noDiagnosis} onToggle={() => onReflectionSettingsChange({ noDiagnosis: !reflectionSettings.noDiagnosis })} />
+        <ToggleRow label="No coaching" value={reflectionSettings.noCoaching} onToggle={() => onReflectionSettingsChange({ noCoaching: !reflectionSettings.noCoaching })} />
+        <ToggleRow label="Observation one sentence" value={reflectionSettings.oneSentenceObservation} onToggle={() => onReflectionSettingsChange({ oneSentenceObservation: !reflectionSettings.oneSentenceObservation })} />
+      </View>
+      <View style={styles.privacyCard}>
+        <Text style={styles.cardTitle}>Advanced reflection</Text>
+        <SettingNumberInput label="Temperature" value={`${reflectionSettings.temperature}`} onChangeText={(value) => onReflectionSettingsChange({ temperature: Number(value) })} />
+        <SettingNumberInput label="Max tokens" value={`${reflectionSettings.maxTokens}`} onChangeText={(value) => onReflectionSettingsChange({ maxTokens: Number(value) })} />
+        <Text style={styles.note}>Temperature is clamped 0–1. Max tokens clamped 64–512. Apple Foundation Models may ignore generation numbers; prompt controls still apply.</Text>
+        <PrimaryButton label="Save reflection settings" onPress={onSaveSettings} />
+        <SecondaryButton label="Reset reflection settings" onPress={onResetSettings} />
+      </View>
+      <View style={styles.privacyCard}>
+        <Text style={styles.cardTitle}>Prompt transparency</Text>
+        <Text style={styles.note}>Enforced API contract only:</Text>
+        <View style={styles.transcriptCard}>
+          <Text selectable style={styles.errorText}>{REQUIRED_REFLECTION_API_CONTRACT}</Text>
+        </View>
+        <Text style={styles.note}>Active template sent before transcript/duration:</Text>
+        <ScrollView style={styles.errorScroll} contentContainerStyle={styles.errorScrollContent}>
+          <Text selectable style={styles.errorText}>{promptTemplate}</Text>
+        </ScrollView>
+        <SecondaryButton label="Copy active template" onPress={onCopyPromptTemplate} />
       </View>
       <DangerButton label="Clear local entries" onPress={() => Alert.alert("Clear entries?", "This removes local journal entries from this app install.", [{ text: "Cancel", style: "cancel" }, { text: "Clear", style: "destructive", onPress: onClear }])} />
     </ScrollView>
+  );
+}
+
+function ToggleRow({ label, value, onToggle }: { label: string; value: boolean; onToggle: () => void }) {
+  return (
+    <Pressable onPress={onToggle} style={({ pressed }) => [styles.toggleRow, pressed && styles.pressed]}>
+      <Text style={styles.cardText}>{label}</Text>
+      <Text style={styles.toggleValue}>{value ? "On" : "Off"}</Text>
+    </Pressable>
+  );
+}
+
+function SettingNumberInput({ label, value, onChangeText }: { label: string; value: string; onChangeText: (value: string) => void }) {
+  return (
+    <View style={styles.settingInputRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <TextInput value={value} onChangeText={onChangeText} keyboardType="decimal-pad" style={styles.numberInput} />
+    </View>
   );
 }
 
@@ -563,6 +621,10 @@ const styles = StyleSheet.create({
   errorScrollContent: { padding: 12 },
   errorText: { color: colors.ink, fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: undefined }), fontSize: 12, lineHeight: 18 },
   promptInput: { backgroundColor: "#f3e6d6", borderColor: "#e5d7c6", borderRadius: 14, borderWidth: 1, color: colors.ink, fontSize: 14, lineHeight: 20, minHeight: 220, padding: 14, textAlignVertical: "top" },
+  toggleRow: { alignItems: "center", backgroundColor: "#f3e6d6", borderRadius: 14, flexDirection: "row", justifyContent: "space-between", padding: 14 },
+  toggleValue: { color: colors.ink, fontSize: 14, fontWeight: "900" },
+  settingInputRow: { backgroundColor: "#f3e6d6", borderRadius: 14, gap: 8, padding: 14 },
+  numberInput: { backgroundColor: colors.card, borderColor: "#e5d7c6", borderRadius: 10, borderWidth: 1, color: colors.ink, fontSize: 16, fontWeight: "700", padding: 12 },
   privacyCard: { backgroundColor: colors.card, borderRadius: 22, gap: 8, padding: 18, ...shadow },
   privacyCardMuted: { backgroundColor: colors.cardSoft, borderRadius: 18, padding: 16 },
   cardTitle: { color: colors.ink, fontSize: 20, fontWeight: "900", letterSpacing: -0.2 },

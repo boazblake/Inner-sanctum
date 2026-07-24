@@ -3,6 +3,7 @@ import { createDeterministicReflection } from "./reflection";
 import { locateReflectionModel } from "./modelPaths";
 import { parseReflection } from "./reflectionParser";
 import { buildReflectionPrompt } from "./reflectionPrompt";
+import { getReflectionSettings } from "./reflectionSettings";
 import type { Reflection } from "./types";
 
 type LlamaContext = Awaited<ReturnType<typeof initLlama>>;
@@ -19,10 +20,11 @@ export async function createLocalReflection(transcript: string, durationSeconds:
   }
   try {
     const prompt = await buildReflectionPrompt({ transcript, durationSeconds });
+    const settings = await getReflectionSettings();
     const result = await context.completion({
       prompt,
-      n_predict: 180,
-      temperature: 0.2,
+      n_predict: settings.maxTokens,
+      temperature: settings.temperature,
       stop: ["</json>", "\n\n"]
     });
     return parseReflection(result.content || result.text, "Local LLM");

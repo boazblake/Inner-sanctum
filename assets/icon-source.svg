@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="46%" r="78%">
+      <stop offset="0" stop-color="#5f4a3d"/>
+      <stop offset="0.48" stop-color="#372820"/>
+      <stop offset="1" stop-color="#171211"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="54%" r="38%">
+      <stop offset="0" stop-color="#d88a58" stop-opacity="0.62"/>
+      <stop offset="0.48" stop-color="#c56b45" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#c56b45" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="stone" x1="30%" y1="24%" x2="70%" y2="84%">
+      <stop offset="0" stop-color="#fff1d8"/>
+      <stop offset="1" stop-color="#c9a783"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <circle cx="512" cy="532" r="390" fill="url(#glow)"/>
+  <circle cx="512" cy="512" r="354" fill="none" stroke="#ead7c3" stroke-width="30" opacity="0.72"/>
+  <circle cx="512" cy="512" r="282" fill="none" stroke="#ead7c3" stroke-width="10" opacity="0.25"/>
+  <path d="M334 728V444a178 178 0 0 1 356 0v284Z" fill="url(#stone)" opacity="0.94"/>
+  <path d="M394 700V462a118 118 0 0 1 236 0v238Z" fill="#221815"/>
+  <circle cx="512" cy="548" r="80" fill="#d88a58" opacity="0.92"/>
+  <circle cx="512" cy="548" r="42" fill="#fff0d5" opacity="0.88"/>
+</svg>

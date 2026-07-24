@@ -43,7 +43,7 @@ Selected path/display name/size are persisted in AsyncStorage. Reset to default 
 
 ## Configurable reflection guidance
 
-Privacy settings include a local guidance editor. Guidance is stored in AsyncStorage and used by both Apple Foundation Models and `llama.rn`. Sanctum appends fixed required instructions for strict JSON output with fields `title`, `topic`, `mood`, `observation`; mood must be one of `settled`, `tender`, `busy`, `heavy`, `clear`. No prompt is sent to any server.
+Privacy settings include local reflection controls: guidance, safety toggles, temperature, max tokens, and a copyable active prompt template. Settings are stored in AsyncStorage and used by both Apple Foundation Models and `llama.rn` where supported. Sanctum only appends fixed required instructions for the JSON API contract: fields `title`, `topic`, `mood`, `observation`; mood one of `settled`, `tender`, `busy`, `heavy`, `clear`; no markdown/fenced code. No prompt is sent to any server.
 
 ## Apple Foundation Models status
 

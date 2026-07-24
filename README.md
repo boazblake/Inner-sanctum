@@ -9,7 +9,7 @@ Private iOS voice journal for quiet contemplation, built with Expo, React Native
 - On-device Whisper transcription through `whisper.rn` when model file exists
 - On-device local LLM reflection through `llama.rn` when model file exists
 - Optional iOS Apple Foundation Models provider hook when app includes compatible native bridge; otherwise falls back to `llama.rn`
-- Configurable reflection guidance stored locally in AsyncStorage, with fixed JSON schema enforced
+- Configurable reflection guidance, safety toggles, temperature, and max token settings stored locally in AsyncStorage, with fixed JSON schema enforced
 - Entries list and entry detail screens
 - Weekly recap generated locally from saved entries
 - Settings/privacy screen with local data clear action
@@ -104,7 +104,7 @@ Default models are bundled by `plugins/withSanctumModels.js`, not `expo-asset`. 
 
 Privacy settings also support importing a user-provided `.gguf` reflection model. Sanctum copies it to `Documents/sanctum-models/`, stores path/name/size in AsyncStorage, and never uploads or downloads it. Suggested LLM families: Qwen or SmolLM GGUF variants sized for device memory. You are responsible for model license compliance.
 
-Privacy settings also expose reflection guidance. Custom guidance is stored locally in AsyncStorage and is sent only to the selected on-device provider. Sanctum always appends the strict JSON contract: `title`, `topic`, `mood`, `observation`; mood must be `settled`, `tender`, `busy`, `heavy`, or `clear`.
+Privacy settings expose reflection guidance, safety toggles (no advice/chat/diagnosis/coaching, one-sentence observation), local LLM generation controls (temperature/max tokens), and a copyable active prompt template. Custom settings are stored locally in AsyncStorage and sent only to the selected on-device provider. Sanctum only enforces the JSON API contract: `title`, `topic`, `mood`, `observation`; mood must be `settled`, `tender`, `busy`, `heavy`, or `clear`; no markdown/fenced code.
 
 Visible app identity is Sanctum. The iOS bundle identifier is `com.anonymous.sanctum`.
 
