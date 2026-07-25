@@ -1,6 +1,6 @@
 # Sanctum
 
-Private iOS voice journal for quiet contemplation, built with Expo, React Native, TypeScript, and offline native AI modules.
+Private native voice journal for quiet contemplation, built with Expo, React Native, TypeScript, and offline native AI modules.
 
 ## Features
 
@@ -13,18 +13,20 @@ Private iOS voice journal for quiet contemplation, built with Expo, React Native
 - Entries list and entry detail screens
 - Weekly recap generated locally from saved entries
 - Settings/privacy screen with local data clear action
-- iOS-focused helper copy and native model bundling
+- Native model bundling for iOS and Android dev builds
 
 No backend, billing, analytics, model download, fake transcript, or network code is included. Missing model files produce actionable errors and do not save fake entries.
 
 ## Native dev build required
 
-Expo Go will not work because `whisper.rn`, `llama.rn`, and native iOS bridge code require native modules. Use an iOS development build:
+Expo Go will not work because `whisper.rn`, `llama.rn`, and native bridge code require native modules. Use a native development build:
 
 ```sh
 npm install
 npx expo prebuild
 npx expo run:ios
+# or, with Android Studio/SDK installed and model files present:
+npx expo run:android
 ```
 
 If you use EAS instead, create a dev client build with the same native config.
@@ -100,13 +102,13 @@ Documents/sanctum-models/reflection-1b-q4.gguf
 
 Do not download models from the app. Add or copy files yourself, then rebuild/relaunch.
 
-Default models are bundled by `plugins/withSanctumModels.js`, not `expo-asset`. During prebuild it adds an iOS build phase that copies defaults into `assets/models/` inside the app bundle.
+Default models are bundled by `plugins/withSanctumModels.js`, not `expo-asset`. During prebuild it adds an iOS build phase that copies defaults into `assets/models/` inside the app bundle, and copies the same files into `android/app/src/main/assets/models` for Android native builds.
 
 Privacy settings also support importing a user-provided `.gguf` reflection model. Sanctum copies it to `Documents/sanctum-models/`, stores path/name/size in AsyncStorage, and never uploads or downloads it. Suggested LLM families: Qwen or SmolLM GGUF variants sized for device memory. You are responsible for model license compliance.
 
 Privacy settings expose reflection guidance, safety toggles (no advice/chat/diagnosis/coaching, one-sentence observation), local LLM generation controls (temperature/max tokens), and a copyable active prompt template. Custom settings are stored locally in AsyncStorage and sent only to the selected on-device provider. Sanctum only enforces the JSON API contract: `title`, `topic`, `mood`, `observation`; mood must be `settled`, `tender`, `busy`, `heavy`, or `clear`; no markdown/fenced code.
 
-Visible app identity is Sanctum. The iOS bundle identifier is `com.anonymous.sanctum`.
+Visible app identity is Sanctum. The iOS bundle identifier and Android package are `com.anonymous.sanctum`.
 
 See `docs/models.md` for model source notes, including `ggerganov/whisper.cpp` Whisper files on Hugging Face and Qwen/SmolLM GGUF options.
 
@@ -114,18 +116,20 @@ See `docs/models.md` for model source notes, including `ggerganov/whisper.cpp` W
 
 Current status: real optional iOS native bridge added as `SanctumFoundationModels`. Swift uses `#if canImport(FoundationModels)` plus `@available(iOS 26.0, *)`; if the framework, OS, or system model is unavailable, JS falls back to `llama.rn`. The config plugin `plugins/withSanctumFoundationModels.js` rewrites and links the Swift/Objective-C bridge during prebuild.
 
-## iOS-only status and privacy
+## Native platform status and privacy
 
-Android support is intentionally removed for now: no `android/` directory, no Android app config, and no Android npm script. No backend, analytics, billing, model downloads, or network behavior are implemented.
+Android native project generation is enabled through Expo prebuild/run and requires Android Studio/SDK plus bundled model files in `assets/models`. No backend, analytics, billing, model downloads, or network behavior are implemented.
 
 ## Run
 
 ```sh
 npm install
 npm run ios
+# or
+npm run android
 ```
 
-Note: native AI needs the iOS dev client/native build from commands above.
+Note: native AI needs the iOS or Android dev client/native build from commands above, with required model files bundled before build.
 
 ## Verify
 

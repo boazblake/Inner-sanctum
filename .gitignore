@@ -46,6 +46,8 @@ lerna-debug.log*
 assets/models/*.bin
 assets/models/*.gguf
 !assets/models/.gitkeep
+android/app/src/main/assets/models/*.bin
+android/app/src/main/assets/models/*.gguf
 
 # OS / editor files
 .DS_Store

@@ -46,6 +46,7 @@ async function getWhisperContext(path: string, isBundleAsset: boolean): Promise<
 }
 
 function normalizeFilePath(uri: string): string {
+  if (uri.startsWith("file:/") && !uri.startsWith("file://")) return uri.slice("file:".length);
   return uri.startsWith("file://") ? uri.slice("file://".length) : uri;
 }
 

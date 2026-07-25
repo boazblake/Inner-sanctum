@@ -69,13 +69,33 @@ function addIosModelBuildPhase(iosRoot, appName) {
   fs.writeFileSync(pbxPath, serialized);
 }
 
+function copyAndroidModels(projectRoot, androidRoot) {
+  const sourceDir = path.join(projectRoot, "assets", "models");
+  const destDir = path.join(androidRoot, "app", "src", "main", "assets", "models");
+  fs.mkdirSync(destDir, { recursive: true });
+
+  for (const fileName of MODEL_FILES) {
+    fs.copyFileSync(path.join(sourceDir, fileName), path.join(destDir, fileName));
+  }
+}
+
 module.exports = function withSanctumModels(config) {
-  return withDangerousMod(config, [
+  config = withDangerousMod(config, [
     "ios",
     async (modConfig) => {
       const projectRoot = modConfig.modRequest.projectRoot;
       assertModelFiles(projectRoot);
       addIosModelBuildPhase(modConfig.modRequest.platformProjectRoot, modConfig.modRequest.projectName || "Sanctum");
+      return modConfig;
+    }
+  ]);
+
+  return withDangerousMod(config, [
+    "android",
+    async (modConfig) => {
+      const projectRoot = modConfig.modRequest.projectRoot;
+      assertModelFiles(projectRoot);
+      copyAndroidModels(projectRoot, modConfig.modRequest.platformProjectRoot);
       return modConfig;
     }
   ]);

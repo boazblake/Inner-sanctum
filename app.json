@@ -6,7 +6,8 @@
     "icon": "./assets/icon.png",
     "orientation": "portrait",
     "platforms": [
-      "ios"
+      "ios",
+      "android"
     ],
     "scheme": "sanctum",
     "userInterfaceStyle": "automatic",
@@ -18,11 +19,32 @@
       },
       "bundleIdentifier": "com.anonymous.sanctum"
     },
+    "android": {
+      "package": "com.anonymous.sanctum",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
     "plugins": [
       [
         "expo-av",
         {
           "microphonePermission": "Sanctum records your voice so it can create a private local journal entry."
+        }
+      ],
+      [
+        "@siteed/audio-studio",
+        {
+          "microphonePermission": "Sanctum records your voice so it can create a private local journal entry.",
+          "enablePhoneStateHandling": false,
+          "enableNotifications": false,
+          "enableBackgroundAudio": false,
+          "enableDeviceDetection": false
         }
       ],
       [
@@ -36,6 +58,11 @@
         {
           "ios": {
             "deploymentTarget": "15.1"
+          },
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 26
           }
         }
       ],
@@ -43,6 +70,12 @@
       "./plugins/withWhisperOldArchPatch",
       "./plugins/withSanctumModels",
       "./plugins/withSanctumFoundationModels"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ccd1c600-1981-4ea2-a2db-653fc05ec4b3"
+      }
+    },
+    "owner": "boazblake"
   }
 }
